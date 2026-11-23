@@ -14,6 +14,9 @@ From the ZIP package
    `GitHub releases <https://github.com/moodle-by-kelsoncm/moodle-editor_tiptap/releases>`_.
 2. Go to **Site administration > Plugins > Install plugins**, upload the ZIP and follow the steps.
 
+The ZIP includes the editor and the four bundled TipTap plugins (``plugins/media``, ``plugins/link``, ``plugins/math`` and
+``plugins/office``).
+
 From Git
 --------
 
@@ -26,3 +29,14 @@ The plugin folder is ``tiptap`` inside the editors folder: ``lib/editor/tiptap``
    git clone https://github.com/moodle-by-kelsoncm/moodle-editor_tiptap.git tiptap
 
 Then go to **Site administration > Notifications** to finish the installation.
+
+Upgrading from 1.x
+------------------
+
+Version 2.0 replaces the editor of 1.x with ``@kelsoncm/tiptap-core``. On upgrade:
+
+- the six toolbar checkboxes of 1.x become a **custom toolbar** with the same buttons, without those that were turned
+  off;
+- the bundled TipTap plugins are installed and enabled; disable them on the settings page if they are not wanted.
+
+Stored texts are not changed.

@@ -2,6 +2,29 @@
 
 All notable changes to the TipTap editor plugin (`editor_tiptap`) will be documented in this file.
 
+## 2.0.0 - 2026-11-23
+
+The editor is rebuilt on [@kelsoncm/tiptap-core](https://kelsoncm.github.io/tiptap-core/) and gains TipTap plugins (subplugins).
+
+### Added
+- Editor based on `@kelsoncm/tiptap-core` 0.18.0 (Tiptap 3), bundled in `thirdparty/tiptap-core` (listed in `thirdpartylibs.xml`) and loaded by RequireJS.
+- Subplugin type `tiptap` (`db/subplugins.json`), with a plugin table on the settings page to enable, disable, order (also by drag and drop), configure and uninstall them.
+- Bundled TipTap plugins:
+  - `tiptap_media`: images, video and audio from the Moodle file picker; uploads (button, paste, drop) to the draft area of the field; hosts allowed for embedded content.
+  - `tiptap_link`: links to the activities and resources of the course.
+  - `tiptap_math`: equations as TeX between `\(` `\)` or `$$` `$$` for the Moodle filters.
+  - `tiptap_office`: import from Word (`.docx`) in the browser, with `mammoth` 1.13.0.
+- Settings: toolbar preset (minimal, basic, full) or custom toolbar, mode (toolbar, balloon, blocks), features of the core and status bar.
+- Capability `tiptap/<name>:use` for each TipTap plugin.
+- Every interface text is a Moodle string (`kt:` strings generated from the core by `.github/scripts/update-tiptap-core.mjs`), translated through AMOS.
+
+### Changed
+- The six toolbar checkboxes of 1.x are migrated to a custom toolbar with the same buttons (upgrade step).
+- The editable area has the language of the user (`lang`), for spell checking and screen readers.
+
+### Removed
+- The 1.x editor (own toolbar, sanitiser and link dialog template) and its six settings.
+
 ## 1.1.1 - 2026-11-21
 
 ### Fixed

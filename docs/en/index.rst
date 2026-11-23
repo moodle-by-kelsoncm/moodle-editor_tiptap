@@ -1,32 +1,38 @@
 Overview - moodle-editor_tiptap
 ===============================
 
-**moodle-editor_tiptap** (component ``editor_tiptap``) is a lightweight WYSIWYG text editor for Moodle. It replaces the text area of
-HTML fields with an editable area and a short toolbar, and saves plain HTML, like the other Moodle editors.
-
-The interface is inspired by the `TipTap <https://tiptap.dev/>`_ editor, but the plugin does **not** bundle the TipTap library:
-it uses the editing features of the browser (``contenteditable``) and has no third-party JavaScript.
+**moodle-editor_tiptap** (component ``editor_tiptap``) is a WYSIWYG text editor for Moodle built on
+`@kelsoncm/tiptap-core <https://kelsoncm.github.io/tiptap-core/>`_ (Tiptap 3). It replaces the text area of HTML fields,
+saves plain HTML like the other Moodle editors, and lets the administrator choose its toolbar, its features and extra
+features installed as **TipTap plugins** (subplugins ``tiptap_*``).
 
 Supports Moodle 4.5 LTS and 5.3 LTS.
+
+.. figure:: img/editor.png
+   :alt: TipTap editor in the page content field of a Moodle page, with the toolbar and a heading, a table and an equation.
+
+   The editor in a page form, with buttons of the bundled TipTap plugins at the end of the toolbar.
 
 Key features
 ------------
 
-- **Toolbar**: paragraph and headings (H1, H2, H3), bold, italic, underline, bullet and ordered lists, links, undo and redo.
-- **Settings**: each formatting button (bold, italic, underline, lists and link) can be turned off by the administrator.
-- **Links**: the insert link dialog accepts ``http(s)://``, ``mailto:``, relative (``/``) and anchor (``#``) links only.
-- **Safe loading**: the text is loaded through an allow list of elements and attributes; scripts, frames, styles, SVG,
-  forms, event handlers and unsafe links (such as ``javascript:``) are removed.
+- **Toolbar**: the administrator chooses a preset (minimal, basic or full) or writes a custom toolbar with command ids.
+- **Features**: tables, fonts, colours, line height, indentation, list styles, task lists, page breaks and more; each one
+  can be turned off.
+- **Modes**: toolbar above the text, balloon over the selection, or blocks (type ``/`` to insert a block).
+- **TipTap plugins**: extra features as subplugins that the administrator enables, disables and orders on the settings
+  page. Four come with the editor:
+
+  - **Images and media**: images, video and audio from the Moodle file picker; uploads (button, paste or drop) go to the
+    draft area of the field.
+  - **Links to activities**: link the selected text to an activity or resource of the course.
+  - **Mathematical notation**: equations written as TeX between ``\(`` ``\)`` or ``$$`` ``$$``, shown by the Moodle filters
+    (MathJax or TeX notation).
+  - **Import from Word**: converts a ``.docx`` file in the browser.
+
+- **Moodle strings**: every text of the interface is a Moodle language string, translated through AMOS.
 - **Theme colours**: the editor follows the Bootstrap colours of the theme, including the Boost colour modes.
-- **Privacy**: the plugin stores no personal data.
-
-Limitations
------------
-
-- No file or image upload, no media embedding, no tables and no source code view.
-- Content outside the allow list (for example embedded frames) is removed when the text is edited and saved; opening and
-  saving a form without changing the text keeps it as stored.
-- Text stored in other formats (for example Moodle auto-format or Markdown) opens in the next enabled editor that supports that format.
+- **Privacy**: the editor and its plugins store no personal data.
 
 Documentation
 -------------
@@ -38,3 +44,4 @@ Documentation
    installation
    configuration
    usage
+   plugins
