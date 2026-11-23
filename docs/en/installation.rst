@@ -14,8 +14,7 @@ From the ZIP package
    `GitHub releases <https://github.com/moodle-by-kelsoncm/moodle-editor_tiptap/releases>`_.
 2. Go to **Site administration > Plugins > Install plugins**, upload the ZIP and follow the steps.
 
-The ZIP includes the editor and the four bundled TipTap plugins (``plugins/media``, ``plugins/link``, ``plugins/math`` and
-``plugins/office``).
+The ZIP includes the editor and the three bundled TipTap plugins (``plugins/media``, ``plugins/link`` and ``plugins/math``).
 
 From Git
 --------

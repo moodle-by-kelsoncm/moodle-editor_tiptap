@@ -21,14 +21,13 @@ Key features
   can be turned off.
 - **Modes**: toolbar above the text, balloon over the selection, or blocks (type ``/`` to insert a block).
 - **TipTap plugins**: extra features as subplugins that the administrator enables, disables and orders on the settings
-  page. Four come with the editor:
+  page. Three come with the editor:
 
   - **Images and media**: images, video and audio from the Moodle file picker; uploads (button, paste or drop) go to the
     draft area of the field.
   - **Links to activities**: link the selected text to an activity or resource of the course.
   - **Mathematical notation**: equations written as TeX between ``\(`` ``\)`` or ``$$`` ``$$``, shown by the Moodle filters
     (MathJax or TeX notation).
-  - **Import from Word**: converts a ``.docx`` file in the browser.
 
 - **Moodle strings**: every text of the interface is a Moodle language string, translated through AMOS.
 - **Theme colours**: the editor follows the Bootstrap colours of the theme, including the Boost colour modes.

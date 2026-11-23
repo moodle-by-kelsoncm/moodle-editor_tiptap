@@ -23,9 +23,9 @@ Plugins incluídos
    * - Notação matemática (``tiptap_math``)
      - Fórmula na linha; fórmula destacada
      - Precisa do filtro MathJax ou notação TeX habilitado para exibir as fórmulas.
-   * - Importar do Word (``tiptap_office``)
-     - Importar do Word (.docx)
-     - O documento é convertido no navegador pela biblioteca ``mammoth`` incluída; nunca é enviado ao servidor.
+
+Plugins que correspondem a plugins de terceiros do TinyMCE (por exemplo, importar do Word) são distribuídos à parte, para
+que cada site decida se os instala. Instale-os em ``plugins/<nome>`` e acesse **Administração do site > Notificações**.
 
 Escrevendo um plugin do TipTap
 ------------------------------

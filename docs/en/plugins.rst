@@ -22,9 +22,9 @@ Bundled plugins
    * - Mathematical notation (``tiptap_math``)
      - Inline equation; display equation
      - Needs the MathJax or TeX notation filter enabled to show the equations.
-   * - Import from Word (``tiptap_office``)
-     - Import from Word (.docx)
-     - The document is converted in the browser by the bundled ``mammoth`` library; it is never sent to the server.
+
+Plugins that match third-party TinyMCE plugins (for example import from Word) are distributed as separate plugins, so each
+site decides whether to install them. Install them in ``plugins/<name>`` and visit **Site administration > Notifications**.
 
 Writing a TipTap plugin
 -----------------------

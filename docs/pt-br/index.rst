@@ -22,14 +22,13 @@ Recursos principais
   cada um pode ser desligado.
 - **Modos**: barra acima do texto, balão sobre a seleção ou blocos (digite ``/`` para inserir um bloco).
 - **Plugins do TipTap**: recursos extras como subplugins que o administrador habilita, desabilita e ordena na página de
-  configurações. Quatro vêm com o editor:
+  configurações. Três vêm com o editor:
 
   - **Imagens e mídia**: imagens, vídeo e áudio pelo seletor de arquivos do Moodle; envios (botão, colar ou arrastar)
     vão para a área de rascunho do campo.
   - **Links para atividades**: liga o texto selecionado a uma atividade ou recurso do curso.
   - **Notação matemática**: fórmulas em TeX entre ``\(`` ``\)`` ou ``$$`` ``$$``, exibidas pelos filtros do Moodle
     (MathJax ou notação TeX).
-  - **Importar do Word**: converte um arquivo ``.docx`` no navegador.
 
 - **Textos do Moodle**: todos os textos da interface são strings de idioma do Moodle, traduzidas pelo AMOS.
 - **Cores do tema**: o editor segue as cores Bootstrap do tema, inclusive os modos de cor do Boost.
