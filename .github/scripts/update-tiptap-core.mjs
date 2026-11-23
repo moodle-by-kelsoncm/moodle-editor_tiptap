@@ -18,7 +18,7 @@ const THIRDPARTY = join(ROOT, 'thirdpartylibs.xml');
 const PREFIX = 'kt:';
 
 async function download(version) {
-  const base = `https://github.com/kelsoncm/tiptap-core/releases/download/v${version}`;
+  const base = `https://github.com/tiptap-by-kelsoncm/tiptap-core/releases/download/v${version}`;
   mkdirSync(TARGET, { recursive: true });
   for (const [name, file] of [
     ['kelsoncm-tiptap-core.umd.js', UMD],

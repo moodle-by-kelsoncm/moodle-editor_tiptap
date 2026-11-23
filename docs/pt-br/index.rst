@@ -2,7 +2,7 @@ Visão geral - moodle-editor_tiptap
 ==================================
 
 O **moodle-editor_tiptap** (componente ``editor_tiptap``) é um editor de texto WYSIWYG para o Moodle construído sobre o
-`@kelsoncm/tiptap-core <https://kelsoncm.github.io/tiptap-core/>`_ (Tiptap 3). Ele substitui a área de texto dos campos HTML,
+`@kelsoncm/tiptap-core <https://tiptap-by-kelsoncm.github.io/tiptap-core/>`_ (Tiptap 3). Ele substitui a área de texto dos campos HTML,
 salva HTML simples como os demais editores do Moodle e permite ao administrador escolher a barra, os recursos e recursos
 extras instalados como **plugins do TipTap** (subplugins ``tiptap_*``).
 

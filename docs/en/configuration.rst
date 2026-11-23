@@ -35,7 +35,7 @@ Custom toolbar
       undo redo | blockType | bold italic underline | bulletList orderedList | link | insertTable
 
    The command ids are listed in the
-   `documentation of tiptap-core <https://kelsoncm.github.io/tiptap-core/docs/comandos-e-barra.html>`_.
+   `documentation of tiptap-core <https://tiptap-by-kelsoncm.github.io/tiptap-core/docs/comandos-e-barra.html>`_.
 
 Mode
    **Toolbar above the text**, **Balloon** (formatting over the selected text) or **Blocks** (no toolbar; type ``/`` in
