@@ -78,31 +78,32 @@ class tiptap_texteditor extends texteditor {
     public function use_editor($elementid, ?array $options = null, $fpoptions = null) {
         global $PAGE;
 
-        $PAGE->requires->js_call_amd('editor_tiptap/editor', 'init', [
-            $elementid,
-            $this->get_editor_config(),
-        ]);
+        $config = $this->get_editor_config($options ?? [], $fpoptions);
+
+        // As in editor_tiny: the editor API only lets editors run JavaScript, and js_call_amd()
+        // warns when its arguments pass a low size limit, which the subplugin options can exceed.
+        $elementid = json_encode((string) $elementid);
+        $config = json_encode($config, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT);
+        $PAGE->requires->js_amd_inline(<<<EOF
+            M.util.js_pending('editor_tiptap/editor');
+            require(['editor_tiptap/editor'], (Editor) => {
+                Editor.init({$elementid}, {$config}).finally(() => M.util.js_complete('editor_tiptap/editor'));
+            });
+        EOF);
     }
 
     /**
-     * Get the toolbar configuration from the admin settings.
+     * Configuration of the editor: settings of the administrator and enabled TipTap plugins.
      *
-     * @return bool[] Button name => enabled.
+     * @param array $options Options given by the form to the editor.
+     * @param stdClass|null $fpoptions File picker options, when the field accepts files.
+     * @return array
      */
-    public function get_editor_config(): array {
-        $buttons = [
-            'enableBold' => 'enablebold',
-            'enableItalic' => 'enableitalic',
-            'enableUnderline' => 'enableunderline',
-            'enableBulletList' => 'enablebulletlist',
-            'enableOrderedList' => 'enableorderedlist',
-            'enableLink' => 'enablelink',
-        ];
-        $config = [];
-        foreach ($buttons as $option => $setting) {
-            // Settings are stored as the strings '1' or '0', and '0' is truthy in JavaScript.
-            $config[$option] = (bool) get_config('editor_tiptap', $setting);
-        }
-        return $config;
+    public function get_editor_config(array $options = [], $fpoptions = null): array {
+        global $PAGE;
+
+        $context = $options['context'] ?? $PAGE->context ?? context_system::instance();
+        $fpoptions = is_array($fpoptions) ? (object) $fpoptions : $fpoptions;
+        return \editor_tiptap\manager::get_config($context, $options, $fpoptions ?: null);
     }
 }

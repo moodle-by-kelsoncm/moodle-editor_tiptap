@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<libraries>
+  <library>
+    <location>thirdparty/tiptap-core</location>
+    <name>@kelsoncm/tiptap-core</name>
+    <description>Framework-agnostic rich text editor on Tiptap 3 (single-file UMD build with Tiptap and ProseMirror).</description>
+    <version>0.17.0</version>
+    <license>MIT</license>
+    <licenseversion></licenseversion>
+    <repository>https://github.com/kelsoncm/tiptap-core</repository>
+    <copyrights>
+      <copyright>2025 Kelson da Costa Medeiros</copyright>
+      <copyright>2025 Tiptap GmbH (Tiptap)</copyright>
+      <copyright>2015-2025 Marijn Haverbeke and others (ProseMirror)</copyright>
+    </copyrights>
+  </library>
+</libraries>

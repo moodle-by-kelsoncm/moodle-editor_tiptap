@@ -1,0 +1,8 @@
+{
+    "subplugintypes": {
+        "tiptap": "plugins"
+    },
+    "plugintypes": {
+        "tiptap": "lib/editor/tiptap/plugins"
+    }
+}
