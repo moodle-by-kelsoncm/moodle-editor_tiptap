@@ -112,17 +112,35 @@ class tiptap extends \core\plugininfo\base {
      * @return array Plugin name => plugin name.
      */
     public static function get_enabled_plugins(): array {
-        return self::get_sorted_plugins(true) ?? [];
+        $names = self::get_sorted_names(true);
+        return $names ? array_combine($names, $names) : [];
     }
 
     /**
-     * Installed plugins in their order: first those listed in editor_tiptap/pluginorder, then the
-     * others by name.
+     * Plugins in their order, as the plugin management table expects them.
      *
      * @param bool $enabledonly Only enabled plugins.
-     * @return array|null Plugin name => plugin name.
+     * @return array|null Plugin name => plugininfo object.
      */
     public static function get_sorted_plugins(bool $enabledonly = false): ?array {
+        $plugins = \core_plugin_manager::instance()->get_plugins_of_type('tiptap');
+        $sorted = [];
+        foreach (self::get_sorted_names($enabledonly) as $name) {
+            if (isset($plugins[$name])) {
+                $sorted[$name] = $plugins[$name];
+            }
+        }
+        return $sorted;
+    }
+
+    /**
+     * Names of the installed plugins in their order: first those listed in
+     * editor_tiptap/pluginorder, then the others by name.
+     *
+     * @param bool $enabledonly Only enabled plugins.
+     * @return string[]
+     */
+    public static function get_sorted_names(bool $enabledonly = false): array {
         $installed = array_keys(\core_plugin_manager::instance()->get_installed_plugins('tiptap'));
         sort($installed);
         $saved = array_filter(explode(',', (string) get_config('editor_tiptap', 'pluginorder')));
@@ -131,7 +149,7 @@ class tiptap extends \core\plugininfo\base {
         if ($enabledonly) {
             $order = array_values(array_filter($order, fn(string $name) => !get_config("tiptap_{$name}", 'disabled')));
         }
-        return $order ? array_combine($order, $order) : [];
+        return $order;
     }
 
     /**
@@ -167,7 +185,7 @@ class tiptap extends \core\plugininfo\base {
      * @return bool Whether the order changed.
      */
     public static function change_plugin_order(string $pluginname, int $direction): bool {
-        $order = array_values(self::get_sorted_plugins() ?? []);
+        $order = self::get_sorted_names();
         $position = array_search($pluginname, $order, true);
         if ($position === false || $direction === 0) {
             return false;

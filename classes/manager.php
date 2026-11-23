@@ -63,6 +63,7 @@ class manager {
             'language' => current_language(),
             'langRevision' => (int) ($CFG->langrev ?? 0),
             'locale' => self::LOCALE,
+            'contentLanguage' => self::get_content_language(current_language()),
             'minHeight' => self::get_min_height($options),
             'plugins' => $plugins,
         ];
@@ -102,7 +103,7 @@ class manager {
                 debugging("TipTap plugin tiptap_{$name} has no class {$class} extending \\editor_tiptap\\plugin.");
                 continue;
             }
-            if (!$class::is_enabled($context, $options)) {
+            if (!$class::is_enabled($context, $options, $fpoptions)) {
                 continue;
             }
             $plugins[] = [
@@ -113,6 +114,20 @@ class manager {
             ];
         }
         return $plugins;
+    }
+
+    /**
+     * Language of the text as a BCP 47 tag, from a Moodle language code (pt_br becomes pt-BR).
+     *
+     * @param string $lang Moodle language code.
+     * @return string
+     */
+    public static function get_content_language(string $lang): string {
+        $parts = explode('_', $lang, 2);
+        if (count($parts) === 2 && strlen($parts[1]) === 2) {
+            return $parts[0] . '-' . strtoupper($parts[1]);
+        }
+        return str_replace('_', '-', $lang);
     }
 
     /**

@@ -118,23 +118,39 @@ const loadStrings = (config) => {
 /**
  * Loads the enabled subplugins. A subplugin that fails is skipped and reported.
  *
+ * getPlugin() returns an EditorPlugin, or {plugin, options} when the subplugin also sets options
+ * of the editor (such as media.upload).
+ *
  * @param {Object} KelsonTiptap The core API.
  * @param {Object} config Editor configuration.
- * @returns {Promise<Object[]>} EditorPlugin objects for the core.
+ * @returns {Promise<{plugins: Object[], options: Object}>} EditorPlugin objects and merged options.
  */
 const loadPlugins = async(KelsonTiptap, config) => {
-    const plugins = await Promise.all(config.plugins.map(async(plugin) => {
+    const results = await Promise.all(config.plugins.map(async(plugin) => {
         try {
             const module = await new Promise((resolve, reject) => {
                 window.require([plugin.module], resolve, reject);
             });
-            return await module.getPlugin(KelsonTiptap, plugin.config, {locale: config.locale});
+            const result = await module.getPlugin(KelsonTiptap, plugin.config, {locale: config.locale});
+            return result && result.name ? {plugin: result} : result;
         } catch (error) {
             Notification.exception(error);
             return null;
         }
     }));
-    return plugins.filter(Boolean);
+
+    const options = {};
+    const plugins = [];
+    results.filter(Boolean).forEach((result) => {
+        if (result.plugin) {
+            plugins.push(result.plugin);
+        }
+        Object.entries(result.options ?? {}).forEach(([key, value]) => {
+            const isObject = value && typeof value === 'object' && !Array.isArray(value);
+            options[key] = isObject ? {...(options[key] ?? {}), ...value} : value;
+        });
+    });
+    return {plugins, options};
 };
 
 /**
@@ -180,7 +196,10 @@ export const init = async(elementId, config) => {
 
     try {
         const KelsonTiptap = await loadCore(config);
-        const [messages, plugins] = await Promise.all([loadStrings(config), loadPlugins(KelsonTiptap, config)]);
+        const [messages, {plugins, options}] = await Promise.all([
+            loadStrings(config),
+            loadPlugins(KelsonTiptap, config),
+        ]);
 
         const host = document.createElement('div');
         host.className = 'editor_tiptap';
@@ -189,12 +208,14 @@ export const init = async(elementId, config) => {
 
         const readonly = textarea.disabled || textarea.readOnly;
         const ui = KelsonTiptap.createEditorUI(host, {
+            ...options,
             content: textarea.value,
             mode: readonly ? 'readonly' : config.mode,
             toolbar: toolbarItems(KelsonTiptap, config),
             features: config.features,
             statusBar: config.statusBar,
             minHeight: config.minHeight,
+            contentLanguage: config.contentLanguage,
             plugins,
             i18n: {
                 locale: config.locale,

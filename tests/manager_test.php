@@ -68,6 +68,17 @@ final class manager_test extends \advanced_testcase {
     }
 
     /**
+     * Moodle language codes become BCP 47 tags for the lang attribute of the text.
+     */
+    public function test_content_language(): void {
+        $this->assertSame('pt-BR', manager::get_content_language('pt_br'));
+        $this->assertSame('en', manager::get_content_language('en'));
+        $this->assertSame('es-MX', manager::get_content_language('es_mx'));
+        $this->assertSame('de-DU', manager::get_content_language('de_du'));
+        $this->assertSame('en-kids', manager::get_content_language('en_kids'));
+    }
+
+    /**
      * The minimum height follows the rows of the form, within limits.
      *
      * @dataProvider min_height_provider
@@ -93,9 +104,28 @@ final class manager_test extends \advanced_testcase {
     }
 
     /**
-     * Without subplugins installed, the editor gets no plugins.
+     * Subplugins reach the editor when enabled and allowed: media needs file picker options and
+     * link needs a course; disabled plugins and users without the capability get none.
      */
-    public function test_plugins_without_subplugins(): void {
-        $this->assertSame([], manager::get_plugins(\context_system::instance(), [], null));
+    public function test_plugins(): void {
+        $system = \context_system::instance();
+        $names = fn(array $plugins) => array_column($plugins, 'name');
+
+        $this->assertSame([], manager::get_plugins($system, [], null));
+
+        $this->setAdminUser();
+        $this->assertSame(['math', 'office'], $names(manager::get_plugins($system, [], null)));
+
+        $course = $this->getDataGenerator()->create_course();
+        $this->getDataGenerator()->create_module('page', ['course' => $course->id, 'name' => 'Syllabus']);
+        $coursecontext = \context_course::instance($course->id);
+        $fpoptions = (object) ['image' => (object) ['itemid' => 1, 'context' => $coursecontext, 'repositories' => []]];
+        $plugins = manager::get_plugins($coursecontext, [], $fpoptions);
+        $this->assertSame(['link', 'math', 'media', 'office'], $names($plugins));
+        $this->assertSame('tiptap_media/plugin', $plugins[2]['module']);
+        $this->assertSame(['tiptap_media_image', 'tiptap_media_video'], $plugins[2]['toolbar']);
+
+        \editor_tiptap\plugininfo\tiptap::enable_plugin('office', 0);
+        $this->assertSame(['link', 'math', 'media'], $names(manager::get_plugins($coursecontext, [], $fpoptions)));
     }
 }
