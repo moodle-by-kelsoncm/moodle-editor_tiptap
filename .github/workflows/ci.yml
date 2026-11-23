@@ -112,6 +112,12 @@ jobs:
         if: ${{ !cancelled() }}
         run: moodle-plugin-ci phpunit --fail-on-warning
 
+      # moodle-plugin-ci runs only the editor_tiptap testsuite; the bundled TipTap plugins have their own.
+      - name: PHPUnit tests (TipTap plugins)
+        if: ${{ !cancelled() }}
+        working-directory: moodle
+        run: vendor/bin/phpunit --testsuite tiptap_media_testsuite,tiptap_link_testsuite --fail-on-warning
+
       - name: Behat features
         id: behat
         if: ${{ !cancelled() }}

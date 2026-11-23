@@ -58,11 +58,33 @@ final class tiptap_test extends \advanced_testcase {
     }
 
     /**
-     * Without installed subplugins, the lists are empty and nothing can be moved.
+     * Plugins are sorted by name until an order is saved; disabled plugins leave the enabled list.
      */
-    public function test_no_plugins(): void {
-        $this->assertSame([], tiptap::get_sorted_plugins());
-        $this->assertSame([], tiptap::get_enabled_plugins());
-        $this->assertFalse(tiptap::change_plugin_order('example', 1));
+    public function test_order(): void {
+        $all = ['link', 'math', 'media', 'office'];
+        $this->assertSame($all, tiptap::get_sorted_names());
+
+        $this->assertTrue(tiptap::change_plugin_order('media', -1));
+        $this->assertSame(['link', 'media', 'math', 'office'], tiptap::get_sorted_names());
+        $this->assertSame('link,media,math,office', get_config('editor_tiptap', 'pluginorder'));
+
+        $this->assertFalse(tiptap::change_plugin_order('link', -1));
+        $this->assertFalse(tiptap::change_plugin_order('office', 1));
+        $this->assertFalse(tiptap::change_plugin_order('unknown', 1));
+
+        tiptap::enable_plugin('math', 0);
+        $this->assertSame(['link', 'media', 'office'], array_values(tiptap::get_enabled_plugins()));
+        $this->assertCount(4, tiptap::get_sorted_plugins());
+        // The plugin management table gets plugininfo objects.
+        $this->assertContainsOnlyInstancesOf(tiptap::class, tiptap::get_sorted_plugins());
+        $this->assertSame(['link', 'media', 'office'], array_keys(tiptap::get_sorted_plugins(true)));
+    }
+
+    /**
+     * Uninstalled plugins saved in the order are ignored.
+     */
+    public function test_order_ignores_missing_plugins(): void {
+        set_config('pluginorder', 'gone,office,link', 'editor_tiptap');
+        $this->assertSame(['office', 'link', 'math', 'media'], tiptap::get_sorted_names());
     }
 }

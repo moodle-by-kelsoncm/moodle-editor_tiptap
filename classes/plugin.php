@@ -22,8 +22,10 @@ use context;
  * Base class of the TipTap subplugins.
  *
  * Each subplugin tiptap_<name> has a class tiptap_<name>\plugininfo extending this one, and an AMD
- * module (tiptap_<name>/plugin by default) exporting getPlugin(KelsonTiptap, config), which returns
- * an EditorPlugin of @kelsoncm/tiptap-core.
+ * module (tiptap_<name>/plugin by default) exporting getPlugin(KelsonTiptap, config, environment).
+ * It returns an EditorPlugin of @kelsoncm/tiptap-core, or {plugin, options}: options (such as
+ * media.upload) are merged into the options of the editor. The environment has the locale id of
+ * the Moodle strings.
  *
  * @package    editor_tiptap
  * @copyright  2026 Kelson da Costa Medeiros <kelsoncm@gmail.com>
@@ -55,9 +57,10 @@ abstract class plugin {
      *
      * @param context $context Context of the editor.
      * @param array $options Options given by the form to the editor.
+     * @param \stdClass|null $fpoptions File picker options, when the field accepts files.
      * @return bool
      */
-    public static function is_enabled(context $context, array $options): bool {
+    public static function is_enabled(context $context, array $options, ?\stdClass $fpoptions = null): bool {
         return has_capability('tiptap/' . static::get_name() . ':use', $context);
     }
 
