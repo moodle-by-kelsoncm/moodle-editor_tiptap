@@ -114,18 +114,18 @@ final class manager_test extends \advanced_testcase {
         $this->assertSame([], manager::get_plugins($system, [], null));
 
         $this->setAdminUser();
-        $this->assertSame(['math', 'office'], $names(manager::get_plugins($system, [], null)));
+        $this->assertSame(['math'], $names(manager::get_plugins($system, [], null)));
 
         $course = $this->getDataGenerator()->create_course();
         $this->getDataGenerator()->create_module('page', ['course' => $course->id, 'name' => 'Syllabus']);
         $coursecontext = \context_course::instance($course->id);
         $fpoptions = (object) ['image' => (object) ['itemid' => 1, 'context' => $coursecontext, 'repositories' => []]];
         $plugins = manager::get_plugins($coursecontext, [], $fpoptions);
-        $this->assertSame(['link', 'math', 'media', 'office'], $names($plugins));
+        $this->assertSame(['link', 'math', 'media'], $names($plugins));
         $this->assertSame('tiptap_media/plugin', $plugins[2]['module']);
         $this->assertSame(['tiptap_media_image', 'tiptap_media_video'], $plugins[2]['toolbar']);
 
-        \editor_tiptap\plugininfo\tiptap::enable_plugin('office', 0);
-        $this->assertSame(['link', 'math', 'media'], $names(manager::get_plugins($coursecontext, [], $fpoptions)));
+        \editor_tiptap\plugininfo\tiptap::enable_plugin('math', 0);
+        $this->assertSame(['link', 'media'], $names(manager::get_plugins($coursecontext, [], $fpoptions)));
     }
 }

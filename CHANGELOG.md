@@ -4,6 +4,9 @@ All notable changes to the TipTap editor plugin (`editor_tiptap`) will be docume
 
 ## 2.0.1 - 2026-11-23
 
+### Removed
+- `tiptap_office` (import from Word) is no longer bundled: it matches a third-party TinyMCE plugin, so it becomes a separate plugin that each site decides whether to install. Sites that installed it with 2.0.0 see it as missing from disk; uninstall it, or install the separate plugin.
+
 ### Changed
 - The release ZIP no longer includes the `docs/` folder (`.gitattributes`), which the automated tests of the Moodle Marketplace do not accept. The documentation stays online.
 
