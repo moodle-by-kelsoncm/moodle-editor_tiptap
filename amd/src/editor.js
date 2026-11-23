@@ -16,329 +16,216 @@
 /**
  * TipTap editor AMD module.
  *
- * Replaces the text area of a Moodle form with a content editable area and a toolbar,
- * and keeps the text area value in sync with the edited HTML.
+ * Replaces the text area of a Moodle form with an editor of @kelsoncm/tiptap-core (bundled in
+ * thirdparty/tiptap-core) and keeps the text area value in sync with the edited HTML. The
+ * interface texts come from the Moodle strings of editor_tiptap ("kt:" strings), and enabled
+ * TipTap subplugins add their own features.
  *
  * @module     editor_tiptap/editor
  * @copyright  2025 Kelson da Costa Medeiros <kelsoncm@gmail.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-import {getStrings} from 'core/str';
-import ModalSaveCancel from 'core/modal_save_cancel';
-import ModalEvents from 'core/modal_events';
-import Templates from 'core/templates';
+import Ajax from 'core/ajax';
+import LocalStorage from 'core/localstorage';
+import Notification from 'core/notification';
+import {getString} from 'core/str';
 
-/** @type {string[]} Language strings used by the editor. */
-const STRINGS = [
-    'blockformat', 'bold', 'bulletlist', 'heading1', 'heading2', 'heading3', 'italic', 'link',
-    'linkurl', 'orderedlist', 'paragraph', 'redo', 'toolbar', 'underline', 'undo',
-];
+/** @type {string} Prefix of the core interface strings in lang/en/editor_tiptap.php. */
+const STRING_PREFIX = 'kt:';
 
-/** @type {RegExp} Link targets accepted by the insert link dialog. */
-const ALLOWEDURL = /^(https?:\/\/|mailto:|\/|#)/i;
+/** @type {Promise<Object>|null} The core library, loaded once per page. */
+let corePromise = null;
 
-/** @type {Set<string>} Elements dropped with their content. */
-const DROPPED = new Set([
-    'applet', 'base', 'button', 'embed', 'form', 'frame', 'frameset', 'iframe', 'input', 'link', 'math', 'meta',
-    'noscript', 'object', 'option', 'script', 'select', 'style', 'svg', 'template', 'textarea',
-]);
-
-/** @type {Set<string>} Elements kept; any other element is replaced by its content. */
-const ALLOWEDTAGS = new Set([
-    'a', 'abbr', 'audio', 'b', 'blockquote', 'br', 'caption', 'cite', 'code', 'col', 'colgroup', 'dd', 'del', 'div',
-    'dl', 'dt', 'em', 'figcaption', 'figure', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'hr', 'i', 'img', 'ins', 'kbd', 'li',
-    'mark', 'ol', 'p', 'picture', 'pre', 'q', 's', 'small', 'source', 'span', 'strike', 'strong', 'sub', 'sup', 'table',
-    'tbody', 'td', 'tfoot', 'th', 'thead', 'tr', 'track', 'u', 'ul', 'video',
-]);
-
-/** @type {Set<string>} Attributes kept on allowed elements. */
-const ALLOWEDATTRS = new Set([
-    'alt', 'cite', 'class', 'colspan', 'controls', 'datetime', 'dir', 'height', 'href', 'kind', 'label', 'lang',
-    'poster', 'rel', 'reversed', 'rowspan', 'scope', 'src', 'srclang', 'start', 'style', 'target', 'title', 'type',
-    'width',
-]);
-
-/** @type {Set<string>} Attributes that hold a URL. */
-const URLATTRS = new Set(['cite', 'href', 'poster', 'src']);
-
-/** @type {RegExp} URLs kept in content: no scheme (relative) or a safe scheme. */
-const SAFEURL = /^(https?:|mailto:|tel:|[^:]*$)/i;
-
-/** @type {RegExp} Images embedded in the content. */
-const DATAIMAGE = /^data:image\/(png|gif|jpe?g|webp);/i;
+/** @type {Map<string, Promise<Object>>} Interface strings by language and revision. */
+const stringPromises = new Map();
 
 /**
- * Check whether an attribute may be copied to the editable area.
+ * Loads the core library (UMD build) and its stylesheet, once per page.
  *
- * @param {string} tag Element name.
- * @param {string} name Attribute name.
- * @param {string} value Attribute value.
- * @returns {boolean}
- */
-const isAllowedAttribute = (tag, name, value) => {
-    if (!ALLOWEDATTRS.has(name)) {
-        return false;
-    }
-    // eslint-disable-next-line no-control-regex
-    const compact = value.replace(/[\s\u0000-\u001f\u007f-\u009f]/g, '');
-    if (URLATTRS.has(name)) {
-        return SAFEURL.test(compact) || (tag === 'img' && name === 'src' && DATAIMAGE.test(compact));
-    }
-    if (name === 'style') {
-        return !/(expression|javascript:|url\()/i.test(compact);
-    }
-    return true;
-};
-
-/**
- * Copy the children of a parsed node into a target, rebuilding only allowed elements and attributes.
+ * The stylesheet is added from here so that it also works in forms loaded in modals, after the
+ * page head was printed.
  *
- * @param {Node} source Parsed node (inert document).
- * @param {Node} target Node of the page that receives the clean copy.
+ * @param {Object} config Editor configuration.
+ * @returns {Promise<Object>} The KelsonTiptap API.
  */
-const copyClean = (source, target) => {
-    source.childNodes.forEach((child) => {
-        if (child.nodeType === Node.TEXT_NODE) {
-            target.appendChild(document.createTextNode(child.textContent));
-            return;
+const loadCore = (config) => {
+    if (!corePromise) {
+        if (!document.querySelector('link[data-editor-tiptap]')) {
+            const link = document.createElement('link');
+            link.rel = 'stylesheet';
+            link.href = config.cssUrl;
+            link.dataset.editorTiptap = 'core';
+            document.head.appendChild(link);
         }
-        if (child.nodeType !== Node.ELEMENT_NODE) {
-            return;
-        }
-        const tag = child.nodeName.toLowerCase();
-        if (DROPPED.has(tag)) {
-            return;
-        }
-        if (!ALLOWEDTAGS.has(tag)) {
-            copyClean(child, target);
-            return;
-        }
-        const el = document.createElement(tag);
-        Array.from(child.attributes).forEach((attr) => {
-            const name = attr.name.toLowerCase();
-            if (isAllowedAttribute(tag, name, attr.value)) {
-                el.setAttribute(name, attr.value);
-            }
+        corePromise = new Promise((resolve, reject) => {
+            window.require([config.coreUrl], resolve, reject);
         });
-        copyClean(child, el);
-        target.appendChild(el);
-    });
+    }
+    return corePromise;
 };
 
 /**
- * Load the HTML of the text area into the editable area through an allow list.
+ * Turns Moodle placeholders ({$a->name}) into core placeholders ({name}).
  *
- * The HTML is parsed in an inert document (nothing runs or loads there) and only allowed
- * elements and attributes are rebuilt in the page, so scripts, event handlers, frames and
- * unsafe URLs never reach the editable area.
- *
- * @param {string} html HTML stored in the text area.
- * @param {HTMLElement} target Editable area.
+ * @param {string} text
+ * @returns {string}
  */
-const loadContent = (html, target) => {
-    const parsed = new DOMParser().parseFromString(html || '', 'text/html');
-    copyClean(parsed.body, target);
+const toCorePlaceholders = (text) => text.replace(/\{\$a->(\w+)\}/g, '{$1}');
+
+/**
+ * Fetches the interface strings of the core in the user language, cached in the browser for the
+ * current language revision.
+ *
+ * @param {Object} config Editor configuration.
+ * @returns {Promise<Object>} Core key => text.
+ */
+const loadStrings = (config) => {
+    const key = `editor_tiptap/strings/${config.language}/${config.langRevision}`;
+    if (!stringPromises.has(key)) {
+        stringPromises.set(key, (async() => {
+            // Revision 0 or less means the language cache is off: always ask the server.
+            const cacheable = config.langRevision > 0;
+            if (cacheable) {
+                const cached = LocalStorage.get(key);
+                if (cached) {
+                    try {
+                        return JSON.parse(cached);
+                    } catch (error) {
+                        // A broken cache entry is fetched again below.
+                    }
+                }
+            }
+            const [request] = Ajax.call([{
+                methodname: 'core_get_component_strings',
+                args: {component: 'editor_tiptap', lang: config.language},
+            }]);
+            const messages = {};
+            (await request).forEach(({stringid, string}) => {
+                if (stringid.startsWith(STRING_PREFIX)) {
+                    messages[stringid.slice(STRING_PREFIX.length)] = toCorePlaceholders(string);
+                }
+            });
+            if (cacheable) {
+                LocalStorage.set(key, JSON.stringify(messages));
+            }
+            return messages;
+        })());
+    }
+    return stringPromises.get(key);
 };
 
 /**
- * Create a toolbar separator.
+ * Loads the enabled subplugins. A subplugin that fails is skipped and reported.
  *
- * @returns {HTMLElement}
+ * @param {Object} KelsonTiptap The core API.
+ * @param {Object} config Editor configuration.
+ * @returns {Promise<Object[]>} EditorPlugin objects for the core.
  */
-const separator = () => {
-    const span = document.createElement('span');
-    span.className = 'separator';
-    span.setAttribute('aria-hidden', 'true');
-    return span;
-};
-
-/**
- * Ask for a URL in a modal and turn the selection into a link.
- *
- * @param {HTMLElement} content Editable area.
- * @param {Object} str Language strings.
- * @param {Function} sync Function that copies the content back to the text area.
- */
-const insertLink = async(content, str, sync) => {
-    const selection = window.getSelection();
-    const range = selection.rangeCount ? selection.getRangeAt(0).cloneRange() : null;
-    const modal = await ModalSaveCancel.create({
-        title: str.link,
-        body: Templates.render('editor_tiptap/link_dialog', {label: str.linkurl}),
-        show: true,
-        removeOnClose: true,
-    });
-    modal.getRoot().on(ModalEvents.save, () => {
-        const input = modal.getRoot()[0].querySelector('[data-region="editor_tiptap-linkurl"]');
-        const url = input ? input.value.trim() : '';
-        if (!ALLOWEDURL.test(url)) {
-            return;
+const loadPlugins = async(KelsonTiptap, config) => {
+    const plugins = await Promise.all(config.plugins.map(async(plugin) => {
+        try {
+            const module = await new Promise((resolve, reject) => {
+                window.require([plugin.module], resolve, reject);
+            });
+            return await module.getPlugin(KelsonTiptap, plugin.config, {locale: config.locale});
+        } catch (error) {
+            Notification.exception(error);
+            return null;
         }
-        content.focus();
-        if (range) {
-            selection.removeAllRanges();
-            selection.addRange(range);
+    }));
+    return plugins.filter(Boolean);
+};
+
+/**
+ * Toolbar items: the preset or the custom toolbar chosen by the administrator, followed by the
+ * items of the subplugins that are not there yet.
+ *
+ * In the custom toolbar, a dropdown is written by its command id (blockType, fontFamily...).
+ *
+ * @param {Object} KelsonTiptap The core API.
+ * @param {Object} config Editor configuration.
+ * @returns {Array} Toolbar items for the core.
+ */
+const toolbarItems = (KelsonTiptap, config) => {
+    const dropdowns = new Map([['blockType', KelsonTiptap.BLOCK_TYPE_SELECT]]);
+    KelsonTiptap.TOOLBAR_PRESETS.full.forEach((item) => {
+        if (typeof item === 'object' && item.type === 'select') {
+            dropdowns.set(item.command, item);
         }
-        document.execCommand('createLink', false, url);
-        sync();
     });
-};
 
-/**
- * Build the list of toolbar buttons from the configuration.
- *
- * @param {Object} options Enabled buttons.
- * @param {Object} str Language strings.
- * @returns {Array[]} Groups of buttons.
- */
-const buildButtons = (options, str) => {
-    const format = [];
-    if (options.enableBold) {
-        format.push({icon: 'B', title: str.bold, command: 'bold'});
-    }
-    if (options.enableItalic) {
-        format.push({icon: 'I', title: str.italic, command: 'italic'});
-    }
-    if (options.enableUnderline) {
-        format.push({icon: 'U', title: str.underline, command: 'underline'});
-    }
-    const lists = [];
-    if (options.enableBulletList) {
-        lists.push({icon: '•', title: str.bulletlist, command: 'insertUnorderedList'});
-    }
-    if (options.enableOrderedList) {
-        lists.push({icon: '1.', title: str.orderedlist, command: 'insertOrderedList'});
-    }
-    if (options.enableLink) {
-        lists.push({icon: '🔗', title: str.link, command: 'createLink', link: true});
-    }
-    const history = [
-        {icon: '↶', title: str.undo, command: 'undo'},
-        {icon: '↷', title: str.redo, command: 'redo'},
-    ];
-    return [format, lists, history].filter((group) => group.length);
-};
+    const items = config.toolbar === 'custom'
+        ? config.toolbarItems.map((id) => dropdowns.get(id) ?? id)
+        : [...KelsonTiptap.TOOLBAR_PRESETS[config.toolbar]];
 
-/**
- * Create the block format selector.
- *
- * @param {Object} str Language strings.
- * @param {HTMLElement} content Editable area.
- * @param {Function} sync Function that copies the content back to the text area.
- * @returns {HTMLSelectElement}
- */
-const buildBlockSelect = (str, content, sync) => {
-    const select = document.createElement('select');
-    select.className = 'tiptap-button';
-    select.setAttribute('aria-label', str.blockformat);
-    [['p', str.paragraph], ['h1', str.heading1], ['h2', str.heading2], ['h3', str.heading3]].forEach(([value, label]) => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = label;
-        select.appendChild(option);
-    });
-    select.addEventListener('change', () => {
-        content.focus();
-        document.execCommand('formatBlock', false, select.value);
-        select.value = 'p';
-        sync();
-    });
-    return select;
+    const present = new Set(items.map((item) => (typeof item === 'string' ? item : item.command ?? item.labelKey)));
+    const extra = config.plugins.flatMap((plugin) => plugin.toolbar).filter((id) => !present.has(id));
+    return extra.length ? [...items, KelsonTiptap.SEPARATOR, ...extra] : items;
 };
 
 /**
  * Initialise the editor for a text area.
  *
  * @param {string} elementId Id of the text area.
- * @param {Object} options Enabled toolbar buttons.
+ * @param {Object} config Configuration built by \editor_tiptap\manager::get_config().
+ * @returns {Promise<void>}
  */
-export const init = async(elementId, options) => {
+export const init = async(elementId, config) => {
     const textarea = document.getElementById(elementId);
     if (!textarea || textarea.dataset.editorTiptap) {
         return;
     }
-    textarea.dataset.editorTiptap = 'ready';
+    textarea.dataset.editorTiptap = 'loading';
 
-    const values = await getStrings(STRINGS.map((key) => ({key, component: 'editor_tiptap'})));
-    const str = {};
-    STRINGS.forEach((key, index) => {
-        str[key] = values[index];
-    });
+    try {
+        const KelsonTiptap = await loadCore(config);
+        const [messages, plugins] = await Promise.all([loadStrings(config), loadPlugins(KelsonTiptap, config)]);
 
-    const container = document.createElement('div');
-    container.className = 'tiptap-editor-container';
-    container.id = elementId + '_tiptap';
+        const host = document.createElement('div');
+        host.className = 'editor_tiptap';
+        host.id = `${elementId}_tiptap`;
+        textarea.insertAdjacentElement('afterend', host);
 
-    const toolbar = document.createElement('div');
-    toolbar.className = 'tiptap-toolbar';
-    toolbar.setAttribute('role', 'toolbar');
-    toolbar.setAttribute('aria-label', str.toolbar);
-    toolbar.setAttribute('aria-controls', container.id + '_content');
-
-    const content = document.createElement('div');
-    content.className = 'tiptap-content';
-    content.id = container.id + '_content';
-    content.contentEditable = 'true';
-    content.setAttribute('role', 'textbox');
-    content.setAttribute('aria-multiline', 'true');
-    const label = document.querySelector('label[for="' + elementId + '"]');
-    if (label) {
-        label.id = label.id || elementId + '_label';
-        content.setAttribute('aria-labelledby', label.id);
-    }
-    loadContent(textarea.value, content);
-
-    // The text area keeps the stored text until the user changes something, so content the
-    // editor does not support (dropped by the allow list) is only lost when the text is edited.
-    let changed = false;
-    const sync = () => {
-        changed = true;
-        // Moodle's YUI adds ids (yui_...) to the nodes it handles in the page; ids are not in
-        // the allow list, so they are removed from the saved HTML.
-        const clean = content.cloneNode(true);
-        clean.querySelectorAll('[id]').forEach((el) => el.removeAttribute('id'));
-        textarea.value = clean.innerHTML;
-    };
-
-    toolbar.appendChild(buildBlockSelect(str, content, sync));
-    buildButtons(options, str).forEach((group) => {
-        toolbar.appendChild(separator());
-        group.forEach((btn) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'tiptap-button';
-            button.textContent = btn.icon;
-            button.title = btn.title;
-            button.setAttribute('aria-label', btn.title);
-            button.dataset.command = btn.command;
-            button.addEventListener('click', (e) => {
-                e.preventDefault();
-                if (btn.link) {
-                    insertLink(content, str, sync);
-                    return;
-                }
-                content.focus();
-                document.execCommand(btn.command, false, null);
-                sync();
-            });
-            toolbar.appendChild(button);
+        const readonly = textarea.disabled || textarea.readOnly;
+        const ui = KelsonTiptap.createEditorUI(host, {
+            content: textarea.value,
+            mode: readonly ? 'readonly' : config.mode,
+            toolbar: toolbarItems(KelsonTiptap, config),
+            features: config.features,
+            statusBar: config.statusBar,
+            minHeight: config.minHeight,
+            plugins,
+            i18n: {
+                locale: config.locale,
+                fallbackLocale: 'en',
+                messages: {[config.locale]: messages},
+            },
         });
-    });
 
-    container.appendChild(toolbar);
-    container.appendChild(content);
-    textarea.hidden = true;
-    textarea.parentNode.insertBefore(container, textarea.nextSibling);
+        // The label of the text area names the editable area for screen readers.
+        const label = document.querySelector(`label[for="${CSS.escape(elementId)}"]`);
+        if (label) {
+            label.id = label.id || `${elementId}_label`;
+            ui.editor.view.dom.setAttribute('aria-labelledby', label.id);
+        }
 
-    content.addEventListener('input', sync);
-
-    const form = textarea.closest('form');
-    if (form) {
-        form.addEventListener('submit', () => {
-            if (changed) {
-                sync();
-            }
+        // The text area keeps the stored text until the user changes something, so content the
+        // editor does not support is only lost when the text is edited.
+        ui.editor.on('update', () => {
+            textarea.value = ui.editor.isEmpty ? '' : ui.editor.getHTML().replace(/(?:<p><\/p>)+$/, '');
+            textarea.dispatchEvent(new Event('input', {bubbles: true}));
         });
+
+        textarea.hidden = true;
+        textarea.dataset.editorTiptap = 'ready';
+    } catch (error) {
+        // The text area stays visible: the text can still be edited and saved as HTML.
+        textarea.dataset.editorTiptap = 'failed';
+        Notification.addNotification({
+            message: await getString('loaderror', 'editor_tiptap'),
+            type: 'error',
+        });
+        Notification.exception(error);
     }
 };

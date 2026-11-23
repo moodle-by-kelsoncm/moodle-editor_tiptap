@@ -60,16 +60,13 @@ final class editor_test extends \advanced_testcase {
      */
     public function test_editor_config(): void {
         $editor = new \tiptap_texteditor();
-        $config = $editor->get_editor_config();
-        $this->assertCount(6, $config);
-        foreach ($config as $enabled) {
-            $this->assertTrue($enabled);
-        }
-
-        set_config('enableunderline', 0, 'editor_tiptap');
-        $config = $editor->get_editor_config();
-        $this->assertFalse($config['enableUnderline']);
-        $this->assertTrue($config['enableBold']);
+        $config = $editor->get_editor_config(['context' => \context_system::instance()]);
+        $this->assertSame('basic', $config['toolbar']);
+        $this->assertSame('toolbar', $config['mode']);
+        $this->assertTrue($config['features']['table']);
+        $this->assertFalse($config['features']['tableOfContents']);
+        $this->assertSame(\editor_tiptap\manager::LOCALE, $config['locale']);
+        $this->assertStringEndsWith('/kelsoncm-tiptap-core.umd.js', $config['coreUrl']);
     }
 
     /**
@@ -78,7 +75,7 @@ final class editor_test extends \advanced_testcase {
     public function test_use_editor_loads_module(): void {
         global $PAGE;
         $PAGE->set_url('/');
-        set_config('enablelink', 0, 'editor_tiptap');
+        set_config('toolbar', 'minimal', 'editor_tiptap');
 
         $editor = new \tiptap_texteditor();
         $editor->use_editor('id_test', []);
@@ -86,6 +83,6 @@ final class editor_test extends \advanced_testcase {
         $code = $PAGE->requires->get_end_code();
         $this->assertStringContainsString('editor_tiptap/editor', $code);
         $this->assertStringContainsString('"id_test"', $code);
-        $this->assertStringContainsString('"enableLink":false', $code);
+        $this->assertStringContainsString('"toolbar":"minimal"', $code);
     }
 }
