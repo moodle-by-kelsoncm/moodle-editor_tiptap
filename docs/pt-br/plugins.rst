@@ -39,7 +39,7 @@ Um plugin ``tiptap_<nome>`` em ``plugins/<nome>`` tem:
   botões);
 - ``classes/privacy/provider.php``;
 - ``amd/src/plugin.js``, que exporta ``getPlugin(KelsonTiptap, config, environment)``. Devolve um ``EditorPlugin`` do
-  `tiptap-core <https://kelsoncm.github.io/tiptap-core/docs/plugins.html>`_ (``name``, ``extensions``, ``register``,
+  `tiptap-core <https://tiptap-by-kelsoncm.github.io/tiptap-core/docs/plugins.html>`_ (``name``, ``extensions``, ``register``,
   ``messages``), ou ``{plugin, options}`` para também definir opções do editor (por exemplo ``media.upload``).
   ``KelsonTiptap`` é a API do core incluído, com as classes do Tiptap ``Node``, ``Mark`` e ``Extension``, então o plugin
   não precisa de outra cópia do Tiptap;

@@ -35,7 +35,7 @@ Barra personalizada
       undo redo | blockType | bold italic underline | bulletList orderedList | link | insertTable
 
    Os ids dos comandos estão na
-   `documentação do tiptap-core <https://kelsoncm.github.io/tiptap-core/docs/comandos-e-barra.html>`_.
+   `documentação do tiptap-core <https://tiptap-by-kelsoncm.github.io/tiptap-core/docs/comandos-e-barra.html>`_.
 
 Modo
    **Barra acima do texto**, **Balão** (formatação sobre o texto selecionado) ou **Blocos** (sem barra; digite ``/``
