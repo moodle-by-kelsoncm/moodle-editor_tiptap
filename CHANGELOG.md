@@ -2,6 +2,12 @@
 
 All notable changes to the TipTap editor plugin (`editor_tiptap`) will be documented in this file.
 
+## 2.0.2 - 2026-11-25
+
+### Changed
+- `@kelsoncm/tiptap-core` moved to the `tiptap-by-kelsoncm` organization: the update script (`.github/scripts/update-tiptap-core.mjs`), `thirdpartylibs.xml`, the README and the documentation point to the new repository and site. The bundled build does not change (0.18.0).
+- Project logo in `docs/marketplace/` (SVG and 512x512 PNG), used by the Moodle Marketplace page and the organization site.
+
 ## 2.0.1 - 2026-11-23
 
 ### Removed
@@ -12,7 +18,7 @@ All notable changes to the TipTap editor plugin (`editor_tiptap`) will be docume
 
 ## 2.0.0 - 2026-11-23
 
-The editor is rebuilt on [@kelsoncm/tiptap-core](https://kelsoncm.github.io/tiptap-core/) and gains TipTap plugins (subplugins).
+The editor is rebuilt on [@kelsoncm/tiptap-core](https://tiptap-by-kelsoncm.github.io/tiptap-core/) and gains TipTap plugins (subplugins).
 
 ### Added
 - Editor based on `@kelsoncm/tiptap-core` 0.18.0 (Tiptap 3), bundled in `thirdparty/tiptap-core` (listed in `thirdpartylibs.xml`) and loaded by RequireJS.
