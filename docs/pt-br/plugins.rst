@@ -27,6 +27,16 @@ Plugins incluídos
 Plugins que correspondem a plugins de terceiros do TinyMCE (por exemplo, importar do Word) são distribuídos à parte, para
 que cada site decida se os instala. Instale-os em ``plugins/<nome>`` e acesse **Administração do site > Notificações**.
 
+.. list-table::
+   :header-rows: 1
+
+   * - Plugin
+     - Botões
+     - Repositório
+   * - Importar do Word (``tiptap_office``)
+     - Importar do Word (.docx), convertido no navegador
+     - `moodle-tiptap_office <https://github.com/moodle-by-kelsoncm/moodle-tiptap_office>`_ (pasta ``plugins/office``)
+
 Escrevendo um plugin do TipTap
 ------------------------------
 
