@@ -26,6 +26,16 @@ Bundled plugins
 Plugins that match third-party TinyMCE plugins (for example import from Word) are distributed as separate plugins, so each
 site decides whether to install them. Install them in ``plugins/<name>`` and visit **Site administration > Notifications**.
 
+.. list-table::
+   :header-rows: 1
+
+   * - Plugin
+     - Buttons
+     - Repository
+   * - Import from Word (``tiptap_office``)
+     - Import from Word (.docx), converted in the browser
+     - `moodle-tiptap_office <https://github.com/moodle-by-kelsoncm/moodle-tiptap_office>`_ (folder ``plugins/office``)
+
 Writing a TipTap plugin
 -----------------------
 

@@ -2,6 +2,12 @@
 
 All notable changes to the TipTap editor plugin (`editor_tiptap`) will be documented in this file.
 
+## 2.0.3 - 2026-11-26
+
+### Changed
+- README and documentation (TipTap plugins page, English and Portuguese) link to the separate plugin
+  [moodle-tiptap_office](https://github.com/moodle-by-kelsoncm/moodle-tiptap_office) (import from Word).
+
 ## 2.0.2 - 2026-11-25
 
 ### Changed
